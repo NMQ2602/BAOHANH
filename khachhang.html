@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Khách hàng</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+        }
+        .container {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Quản lý Khách hàng</h1>
+    </div>
+    <div class="container">
+        <a href="index.html" class="btn btn-secondary mb-3">Quay lại</a>
+        <button class="btn btn-primary mb-3" onclick="showAddCustomerForm()">Thêm Khách hàng</button>
+        <div id="customerForm" class="mb-3" style="display: none;">
+            <form id="addCustomerForm">
+                <div class="form-group">
+                    <label for="product_id">Mã sản phẩm</label>
+                    <input type="text" class="form-control" id="product_id" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer_id">Mã khách hàng</label>
+                    <input type="text" class="form-control" id="customer_id" required>
+                </div>
+                <div class="form-group">
+                    <label for="customer_name">Họ tên</label>
+                    <input type="text" class="form-control" id="customer_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="address">Địa chỉ</label>
+                    <input type="text" class="form-control" id="address" required>
+                </div>
+                <div class="form-group">
+                    <label for="phone_number">Số điện thoại</label>
+                    <input type="text" class="form-control" id="phone_number" required>
+                </div>
+                <button type="submit" class="btn btn-success">Lưu</button>
+                <button type="button" class="btn btn-secondary" onclick="hideAddCustomerForm()">Hủy</button>
+            </form>
+        </div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Mã sản phẩm</th>
+                    <th>Mã khách hàng</th>
+                    <th>Họ tên</th>
+                    <th>Địa chỉ</th>
+                    <th>Số điện thoại</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="customerList">
+                <!-- Khách hàng sẽ được thêm vào đây -->
+            </tbody>
+        </table>
+    </div>
+    <script>
+        function showAddCustomerForm() {
+            document.getElementById('customerForm').style.display = 'block';
+        }
+
+        function hideAddCustomerForm() {
+            document.getElementById('customerForm').style.display = 'none';
+        }
+
+        document.getElementById('addCustomerForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const product_id = document.getElementById('product_id').value;
+            const customer_id = document.getElementById('customer_id').value;
+            const customer_name = document.getElementById('customer_name').value;
+            const address = document.getElementById('address').value;
+            const phone_number = document.getElementById('phone_number').value;
+
+            fetch('/add-customer', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    product_id: product_id,
+                    customer_id: customer_id,
+                    customer_name: customer_name,
+                    address: address,
+                    phone_number: phone_number
+                })
+            }).then(response => {
+                if (response.ok) {
+                    alert('Thêm khách hàng thành công');
+                    hideAddCustomerForm();
+                    loadCustomers();
+                } else {
+                    alert('Có lỗi xảy ra');
+                }
+            });
+        });
+
+        function loadCustomers() {
+            fetch('/customers')
+                .then(response => response.json())
+                .then(customers => {
+                    const customerList = document.getElementById('customerList');
+                    customerList.innerHTML = '';
+                    customers.forEach(customer => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${customer.product_id}</td>
+                            <td>${customer.customer_id}</td>
+                            <td>${customer.customer_name}</td>
+                            <td>${customer.address}</td>
+                            <td>${customer.phone_number}</td>
+                            <td>
+                                <button class="btn btn-danger" onclick="deleteCustomer(${customer.customer_id})">Xóa</button>
+                            </td>
+                        `;
+                        customerList.appendChild(row);
+                    });
+                });
+        }
+
+        function deleteCustomer(customerId) {
+            fetch(`/delete-customer/${customerId}`, {
+                method: 'DELETE'
+            }).then(response => {
+                if (response.ok) {
+                    alert('Xóa khách hàng thành công');
+                    loadCustomers();
+                } else {
+                    alert('Có lỗi xảy ra');
+                }
+            });
+        }
+
+        window.onload = loadCustomers;
+    </script>
+</body>
+</html>

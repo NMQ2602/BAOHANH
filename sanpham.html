@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quản lý Sản phẩm</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f8f9fa;
+        }
+        .header {
+            background-color: #007bff;
+            color: white;
+            padding: 15px 0;
+            text-align: center;
+        }
+        .container {
+            margin-top: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Quản lý Sản phẩm</h1>
+    </div>
+    <div class="container">
+        <a href="index.html" class="btn btn-secondary mb-3">Quay lại</a>
+        <button class="btn btn-primary mb-3" onclick="showAddProductForm()">Thêm Sản phẩm</button>
+        <div id="productForm" class="mb-3" style="display: none;">
+            <form id="addProductForm">
+                <div class="form-group">
+                    <label for="product_id">Mã sản phẩm</label>
+                    <input type="text" class="form-control" id="product_id" required>
+                </div>
+                <div class="form-group">
+                    <label for="product_name">Tên sản phẩm</label>
+                    <input type="text" class="form-control" id="product_name" required>
+                </div>
+                <div class="form-group">
+                    <label for="product_type">Loại sản phẩm</label>
+                    <input type="text" class="form-control" id="product_type" required>
+                </div>
+                <div class="form-group">
+                    <label for="purchase_date">Ngày mua</label>
+                    <input type="date" class="form-control" id="purchase_date" required>
+                </div>
+                <div class="form-group">
+                    <label for="warranty_period">Thời gian bảo hành</label>
+                    <input type="text" class="form-control" id="warranty_period" required>
+                </div>
+                <div class="form-group">
+                    <label for="warranty_expiry_date">Ngày hết hạn bảo hành</label>
+                    <input type="date" class="form-control" id="warranty_expiry_date" required>
+                </div>
+                <button type="submit" class="btn btn-success">Lưu</button>
+                <button type="button" class="btn btn-secondary" onclick="hideAddProductForm()">Hủy</button>
+            </form>
+        </div>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Mã sản phẩm</th>
+                    <th>Tên sản phẩm</th>
+                    <th>Loại sản phẩm</th>
+                    <th>Ngày mua</th>
+                    <th>Thời gian bảo hành</th>
+                    <th>Ngày hết hạn bảo hành</th>
+                    <th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="productList">
+                <!-- Sản phẩm sẽ được thêm vào đây -->
+            </tbody>
+        </table>
+    </div>
+    <script>
+        function showAddProductForm() {
+            document.getElementById('productForm').style.display = 'block';
+        }
+
+        function hideAddProductForm() {
+            document.getElementById('productForm').style.display = 'none';
+        }
+
+        document.getElementById('addProductForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+            const product_id = document.getElementById('product_id').value;
+            const product_name = document.getElementById('product_name').value;
+            const product_type = document.getElementById('product_type').value;
+            const purchase_date = document.getElementById('purchase_date').value;
+            const warranty_period = document.getElementById('warranty_period').value;
+            const warranty_expiry_date = document.getElementById('warranty_expiry_date').value;
+
+            const product = {
+                product_id,
+                product_name,
+                product_type,
+                purchase_date,
+                warranty_period,
+                warranty_expiry_date
+            };
+
+            fetch('http://localhost:3000/products', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(product)
+            })
+            .then(response => response.json())
+            .then(data => {
+                const productList = document.getElementById('productList');
+                const row = document.createElement('tr');
+
+                row.innerHTML = `
+                    <td>${product.product_id}</td>
+                    <td>${product.product_name}</td>
+                    <td>${product.product_type}</td>
+                    <td>${product.purchase_date}</td>
+                    <td>${product.warranty_period}</td>
+                    <td>${product.warranty_expiry_date}</td>
+                    <td>
+                        <button class="btn btn-danger" onclick="deleteProduct(${data.id})">Xóa</button>
+                    </td>
+                `;
+
+                productList.appendChild(row);
+                hideAddProductForm();
+            });
+        });
+
+        function deleteProduct(id) {
+            fetch(`http://localhost:3000/products/${id}`, {
+                method: 'DELETE'
+            })
+            .then(() => {
+                document.getElementById(`product-${id}`).remove();
+            });
+        }
+
+        // Fetch and display products
+        fetch('http://localhost:3000/products')
+            .then(response => response.json())
+            .then(data => {
+                const productList = document.getElementById('productList');
+                data.forEach(product => {
+                    const row = document.createElement('tr');
+                    row.setAttribute('id', `product-${product.id}`);
+
+                    row.innerHTML = `
+                        <td>${product.product_id}</td>
+                        <td>${product.product_name}</td>
+                        <td>${product.product_type}</td>
+                        <td>${product.purchase_date}</td>
+                        <td>${product.warranty_period}</td>
+                        <td>${product.warranty_expiry_date}</td>
+                        <td>
+                            <button class="btn btn-danger" onclick="deleteProduct(${product.id})">Xóa</button>
+                        </td>
+                    `;
+
+                    productList.appendChild(row);
+                });
+            });
+    </script>
+</body>
+</html>
